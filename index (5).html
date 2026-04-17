@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CBI — Staff of the Quarter Nomination</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f3; color: #1a1a1a; font-size: 15px; line-height: 1.6; padding: 2rem 1rem 4rem; }
+    .wrap { max-width: 700px; margin: 0 auto; }
+    .page-header { margin-bottom: 1.75rem; }
+    .page-header h1 { font-size: 22px; font-weight: 700; color: #111; margin-bottom: 4px; }
+    .page-header p { font-size: 14px; color: #666; }
+    .card { background: #fff; border: 1px solid #e5e4e0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .nominator-strip { background: #f0efeb; border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
+    .session-header { display: flex; align-items: center; gap: 10px; margin-bottom: 1.25rem; }
+    .badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; letter-spacing: .05em; }
+    .badge-m { background: #dbeafe; color: #1e40af; }
+    .badge-f { background: #fce7f3; color: #9d174d; }
+    .session-title { font-size: 17px; font-weight: 600; color: #111; }
+    label.flabel { display: block; font-size: 13px; color: #666; margin-bottom: 6px; margin-top: 12px; }
+    label.flabel:first-child { margin-top: 0; }
+    select { width: 100%; padding: 9px 12px; font-size: 14px; border: 1px solid #d1d0cc; border-radius: 8px; background: #fff; color: #111; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; cursor: pointer; }
+    select:focus { outline: 2px solid #3b82f6; outline-offset: 1px; }
+    .criteria-block { margin-top: 1.25rem; border-top: 1px solid #e5e4e0; padding-top: 1.25rem; display: none; }
+    .criteria-block.visible { display: block; }
+    .group-title { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 1rem; }
+    .criterion-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 1.1rem; flex-wrap: wrap; }
+    .cname { font-size: 14px; color: #222; flex: 1; min-width: 200px; padding-top: 6px; }
+    .rating-pills { display: flex; gap: 5px; flex-wrap: wrap; }
+    .pill { display: inline-block; padding: 5px 10px; font-size: 13px; border-radius: 20px; border: 1px solid #d1d0cc; cursor: pointer; color: #555; background: #fff; transition: background .1s, color .1s; user-select: none; }
+    .pill:hover { background: #f0efeb; }
+    .pill.active-m { background: #dbeafe; color: #1e40af; border-color: #93c5fd; font-weight: 700; }
+    .pill.active-f { background: #fce7f3; color: #9d174d; border-color: #f9a8d4; font-weight: 700; }
+    .divider { border: none; border-top: 1px solid #e5e4e0; margin: 1.25rem 0; }
+    .submit-btn { width: 100%; padding: 12px; font-size: 15px; font-weight: 600; border-radius: 10px; background: #111; color: #fff; border: none; cursor: pointer; margin-top: .5rem; transition: opacity .15s; }
+    .submit-btn:hover { opacity: .85; }
+    .submit-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .toast { margin-top: 1rem; padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; text-align: center; display: none; }
+    .toast.show { display: block; }
+    .toast.ok { background: #d1fae5; color: #065f46; }
+    .toast.err { background: #fee2e2; color: #991b1b; }
+    .notice-box { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 12px 16px; margin-bottom: 1.5rem; font-size: 13px; color: #92400e; line-height: 1.6; }
+    .notice-box strong { display: block; margin-bottom: 4px; font-size: 13px; }
+    .stage-closed { text-align: center; padding: 4rem 2rem; }
+    .stage-closed h2 { font-size: 22px; font-weight: 700; color: #111; margin-bottom: 8px; }
+    .stage-closed p { color: #666; font-size: 15px; }
+    .stage-icon { font-size: 48px; margin-bottom: 1rem; }
+    .stage-badge { display: inline-block; background: #1e40af; color: #fff; font-size: 12px; font-weight: 700; padding: 3px 12px; border-radius: 20px; margin-bottom: 1rem; letter-spacing: .05em; }
+    .loading { text-align: center; padding: 3rem; color: #888; font-size: 14px; }
+    @media (max-width: 500px) { .criterion-row { flex-direction: column; gap: 8px; } .cname { padding-top: 0; } }
+  </style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div class="loading">Loading nomination portal...</div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://rhzdmzbodhoqaywfkftj.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoemRtemJvZGhvcWF5d2ZrZnRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNDM2NjIsImV4cCI6MjA5MTkxOTY2Mn0.2iLDRWCy-JyJNxOgo4w6fQ2MM8Ditdy6YTRjIKQQ5S4';
+
+  const DEPARTMENTS = ["Admin","Education","Finance","FSL","Grant & Partnership","Health","Logistics / Procurement","MEAL","Nutrition","Protection","Security","WASH"];
+
+  const MALE_STAFF = ["Abana Dauda","Abraham Albert Alvans","Amos Musa","Augustine Oluwole","Baba Kaka","Benedict Osita","Borobu Sanctus Godiya","Bulus Ibrahim","Daniel Benson","Daniel Gbenga","Dauda Tumba","El-raham Mbursa","Emmanuel Raphael","Eric Echaru","Gideon Ogbonna Okpuna","Gordon Okelinga","Haruna Mbursa","Holman Emmanuel Samuel","Hyelafia Sani Hassan","Ibrahim Zephaniah","Isaac Esi Ogbu","Isaiah Usman Ikwuntole","Isaiah Yakubu","Isuwa Bitrus Kashimbe","JEREMIAH ADESIYAN","Jeremiah Ebere","Jonga Ishaku","Joseph Bayo Alakoba","Kehinde Samuel","Kofianan Anthony","MOSES CHALAREY","Mathew Bubari","Meno Kadakufo","Midokpe Eugene","Muhammad Alhaji Muhammad","Nrior Jonah Renner","Oche Job","Ogunleye Ifeolouwa Micheal","Okpe Ngbede Caleb","Omale Gabriel","Peace Sunday","Peter Bassey","Philip Abagu","Salvation Nimrod","Shamgar Idegwu","Signs Archibong","Sokoga Victor Ategbe","Stephen Bako","Sulaiman Abubakar Yakubu","Ugochuckwu David Ewele","Vincent Venant","Williams Ede","Yaga Ahmadu Maiva","Yakubu A. Olugbenga","Zubairu Ibrahim"];
+  const FEMALE_STAFF = ["Ameh Patience Enechojo","Ashiltiya Stanley","Binta Muhammad Yahya","Blessed Joseph","Blessing Ogar Akpana","Charity Mutah","Chioma Iwuji","Christiana Daniel","Deborah Oye","Dorcas Ehi Omajali","Dorcas Samuel","Esther Bello","Faith Affuafor","Faith Nnadi","Favour Ekor","Favour Igho Iyare","Funmi Adekoba","Grace Ahonkhai","Irene Terrah Ozin","Joy Joseph","Kenneth Priscilla","Lois Kenneth","Lydia Maina","MARTA MATHEW","Margaret Balami","Mercy Oche","Mercy Solomon","Miracle Edeh","Modupe Omowunmi Wasiu","Nana Abdu","Nkebuisi Chisom","Patience Okandua","Phebe Nikes","Precious Chidi","Promise Ephraim","Promise Isaac","Rachel Luka","Rebecca Michael","Rejoice Ishaya","Rejoice Zubairu","Ruth Eshomomoh","SAMUEL PRECIOUS","SUSANNA IJACHI OGWA","Sinabo Matthew","Sinomi Matthew Bubari","Susan Bitrus","Talatu Kambasaya","Usman Vivian Songden","Victoria Ayinde Anu"];
+
+  const PERF = ["Punctuality","Team collaboration","Meeting of quarterly set objectives"];
+  const VALS = ["Service in love","Excellence","Integrity"];
+  const RATINGS = [10,20,30,40,50,60,70,80,90,100];
+
+  let scores = { male: {}, female: {} };
+  let currentStage = 0;
+  let stage2Candidates = { male: [], female: [] };
+
+  async function db(endpoint, options={}) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${endpoint}`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation', ...options.headers },
+      ...options
+    });
+    if (options.method === 'POST') return res;
+    return res.json();
+  }
+
+  async function init() {
+    const data = await db('stage_control?id=eq.1');
+    if (!data || !data[0]) { renderClosed('Nomination portal is not yet active.'); return; }
+    const ctrl = data[0];
+    currentStage = ctrl.current_stage;
+    if (!ctrl.stage1_open && !ctrl.stage2_open) { renderClosed('Nomination is currently closed. Please check back later.'); return; }
+    if (ctrl.stage1_open) { renderForm(1); return; }
+    if (ctrl.stage2_open) {
+      const cands = await db('stage2_candidates?select=name,gender');
+      cands.forEach(c => {
+        if (c.gender === 'Male') stage2Candidates.male.push(c.name);
+        else stage2Candidates.female.push(c.name);
+      });
+      renderForm(2);
+    }
+  }
+
+  function renderClosed(msg) {
+    document.getElementById('app').innerHTML = `
+      <div class="stage-closed">
+        <div class="stage-icon">🔒</div>
+        <h2>Portal Closed</h2>
+        <p>${msg}</p>
+      </div>`;
+  }
+
+  function renderForm(stage) {
+    const males = stage === 1 ? MALE_STAFF : stage2Candidates.male;
+    const females = stage === 1 ? FEMALE_STAFF : stage2Candidates.female;
+    const nominatorName = document.getElementById('nominator')?.value || '';
+
+    document.getElementById('app').innerHTML = `
+      <div class="page-header">
+        <div class="stage-badge">STAGE ${stage} — ${stage === 1 ? 'DEPARTMENTAL' : 'GENERAL'} NOMINATION</div>
+        <h1>CBI Staff of the Quarter</h1>
+        <p>${stage === 1 ? 'Nominate one male and one female colleague from your department.' : 'Nominate one male and one female from the departmental winners.'}</p>
+      </div>
+
+      ${stage === 1 ? `
+      <div class="notice-box">
+        <strong>⚠️ Important Notice — Stage 1</strong>
+        You are required to nominate only colleagues within your own department — one male and one female. Nominating someone outside your department will invalidate your submission. Please ensure your selections are from your department before submitting.
+      </div>` : ''}
+
+      <div class="nominator-strip">
+        <label class="flabel">Your name</label>
+        <select id="nominator" onchange="checkNominatorEligibility(${stage})">
+          <option value="">— Select your name —</option>
+          ${[...MALE_STAFF, ...FEMALE_STAFF].sort().map(n => `<option value="${n}">${n}</option>`).join('')}
+        </select>
+        <label class="flabel">Your department</label>
+        <select id="department">
+          <option value="">— Select your department —</option>
+          ${DEPARTMENTS.map(d => `<option value="${d}">${d}</option>`).join('')}
+        </select>
+      </div>
+
+      <div id="form-body" style="display:none">
+        <div class="card">
+          <div class="session-header">
+            <span class="badge badge-m">Session 1</span>
+            <span class="session-title">Male nominee</span>
+          </div>
+          <label class="flabel">Select a male colleague</label>
+          <select id="male-select" onchange="showCriteria('male')">
+            <option value="">— Choose a name —</option>
+            ${males.map(n => `<option value="${n}">${n}</option>`).join('')}
+          </select>
+          <div id="male-criteria" class="criteria-block">
+            <div class="group-title">Performance criteria</div>
+            <div id="male-perf-rows"></div>
+            <div class="divider"></div>
+            <div class="group-title">Values</div>
+            <div id="male-vals-rows"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="session-header">
+            <span class="badge badge-f">Session 2</span>
+            <span class="session-title">Female nominee</span>
+          </div>
+          <label class="flabel">Select a female colleague</label>
+          <select id="female-select" onchange="showCriteria('female')">
+            <option value="">— Choose a name —</option>
+            ${females.map(n => `<option value="${n}">${n}</option>`).join('')}
+          </select>
+          <div id="female-criteria" class="criteria-block">
+            <div class="group-title">Performance criteria</div>
+            <div id="female-perf-rows"></div>
+            <div class="divider"></div>
+            <div class="group-title">Values</div>
+            <div id="female-vals-rows"></div>
+          </div>
+        </div>
+
+        <button class="submit-btn" id="submit-btn" onclick="submitForm(${stage})">Submit nomination</button>
+        <div class="toast" id="toast"></div>
+      </div>
+
+      <div id="ineligible-msg" style="display:none">
+        <div class="card" style="text-align:center;padding:2rem">
+          <div style="font-size:36px;margin-bottom:1rem">🏆</div>
+          <h2 style="font-size:18px;font-weight:700;margin-bottom:8px">You are not eligible to vote in Stage 2</h2>
+          <p style="color:#666;font-size:14px">As a departmental winner, you have been nominated to the general stage. Thank you for your excellent work!</p>
+        </div>
+      </div>`;
+  }
+
+  function checkNominatorEligibility(stage) {
+    const nom = document.getElementById('nominator').value;
+    const formBody = document.getElementById('form-body');
+    const ineligible = document.getElementById('ineligible-msg');
+    if (!nom) { formBody.style.display = 'none'; ineligible.style.display = 'none'; return; }
+    if (stage === 2) {
+      const isWinner = [...stage2Candidates.male, ...stage2Candidates.female].includes(nom);
+      if (isWinner) { formBody.style.display = 'none'; ineligible.style.display = 'block'; return; }
+    }
+    formBody.style.display = 'block';
+    ineligible.style.display = 'none';
+    scores = { male: {}, female: {} };
+  }
+
+  function pillsHTML(session, group, criteria) {
+    return criteria.map((c, i) => {
+      const key = group + i;
+      const pills = RATINGS.map(r => {
+        const active = scores[session][key] === r;
+        const cls = active ? `pill active-${session === 'male' ? 'm' : 'f'}` : 'pill';
+        return `<span class="${cls}" onclick="pick('${session}','${group}',${i},${r},this)">${r}%</span>`;
+      }).join('');
+      return `<div class="criterion-row"><span class="cname">${c}</span><div class="rating-pills" id="pills-${session}-${group}-${i}">${pills}</div></div>`;
+    }).join('');
+  }
+
+  function pick(session, group, idx, val, el) {
+    scores[session][group + idx] = val;
+    document.getElementById(`pills-${session}-${group}-${idx}`).querySelectorAll('.pill').forEach(p => p.className = 'pill');
+    el.className = `pill active-${session === 'male' ? 'm' : 'f'}`;
+  }
+
+  function renderCriteria(session) {
+    document.getElementById(`${session}-perf-rows`).innerHTML = pillsHTML(session, 'perf', PERF);
+    document.getElementById(`${session}-vals-rows`).innerHTML = pillsHTML(session, 'vals', VALS);
+  }
+
+  function showCriteria(session) {
+    const sel = document.getElementById(`${session}-select`).value;
+    const block = document.getElementById(`${session}-criteria`);
+    if (sel) { scores[session] = {}; renderCriteria(session); block.classList.add('visible'); }
+    else block.classList.remove('visible');
+  }
+
+  function showToast(msg, ok) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'toast show ' + (ok ? 'ok' : 'err');
+    setTimeout(() => t.className = 'toast', 4000);
+  }
+
+  async function submitForm(stage) {
+    const nom = document.getElementById('nominator').value;
+    const dept = document.getElementById('department').value;
+    const male = document.getElementById('male-select').value;
+    const female = document.getElementById('female-select').value;
+
+    if (!nom) { showToast('Please select your name.', false); return; }
+    if (!dept) { showToast('Please select your department.', false); return; }
+    if (!male) { showToast('Please select a male nominee.', false); return; }
+    if (!female) { showToast('Please select a female nominee.', false); return; }
+    if (male === nom) { showToast('You cannot nominate yourself.', false); return; }
+    if (female === nom) { showToast('You cannot nominate yourself.', false); return; }
+
+    const allKeys = [
+      ...PERF.map((_,i) => ({s:'male', k:'perf'+i, label:'Male — '+PERF[i]})),
+      ...VALS.map((_,i) => ({s:'male', k:'vals'+i, label:'Male — '+VALS[i]})),
+      ...PERF.map((_,i) => ({s:'female', k:'perf'+i, label:'Female — '+PERF[i]})),
+      ...VALS.map((_,i) => ({s:'female', k:'vals'+i, label:'Female — '+VALS[i]})),
+    ];
+    for (const {s,k,label} of allKeys) {
+      if (!scores[s][k]) { showToast(`Please rate: ${label}`, false); return; }
+    }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true; btn.textContent = 'Submitting...';
+
+    const payload = {
+      nominator_name: nom, nominator_department: dept,
+      male_nominee: male, female_nominee: female,
+      male_punctuality: scores.male.perf0, male_team_collaboration: scores.male.perf1, male_quarterly_objectives: scores.male.perf2,
+      male_service_in_love: scores.male.vals0, male_excellence: scores.male.vals1, male_integrity: scores.male.vals2,
+      female_punctuality: scores.female.perf0, female_team_collaboration: scores.female.perf1, female_quarterly_objectives: scores.female.perf2,
+      female_service_in_love: scores.female.vals0, female_excellence: scores.female.vals1, female_integrity: scores.female.vals2,
+    };
+
+    const table = stage === 1 ? 'nominations_stage1' : 'nominations_stage2';
+    const res = await db(table, { method: 'POST', body: JSON.stringify(payload) });
+
+    if (res.ok || res.status === 201) {
+      document.getElementById('app').innerHTML = `
+        <div class="stage-closed">
+          <div class="stage-icon">✅</div>
+          <h2>Nomination submitted!</h2>
+          <p>Thank you <strong>${nom.split(' ')[0]}</strong>. Your nomination for <strong>${male}</strong> and <strong>${female}</strong> has been recorded.</p>
+        </div>`;
+    } else {
+      btn.disabled = false; btn.textContent = 'Submit nomination';
+      showToast('Submission failed. Please try again.', false);
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
