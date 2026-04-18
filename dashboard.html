@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CBI — Staff of the Quarter Live Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f1117; color: #f0f0f0; font-size: 14px; line-height: 1.6; min-height: 100vh; }
+
+    /* LOGIN */
+    .login-wrap { max-width: 380px; margin: 8rem auto; padding: 1rem; }
+    .login-card { background: #1a1d27; border: 1px solid #2a2d3a; border-radius: 16px; padding: 2rem; }
+    .login-card h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; color: #fff; }
+    .login-card p { font-size: 13px; color: #888; margin-bottom: 1.5rem; }
+    .login-logo { font-size: 36px; margin-bottom: 1rem; }
+    input[type="password"] { width: 100%; padding: 11px 14px; font-size: 14px; border: 1px solid #2a2d3a; border-radius: 10px; background: #0f1117; color: #fff; margin-bottom: 1rem; outline: none; }
+    input[type="password"]:focus { border-color: #4f6ef7; }
+    .login-btn { width: 100%; padding: 11px; font-size: 15px; font-weight: 600; border-radius: 10px; background: linear-gradient(135deg, #4f6ef7, #7c3aed); color: #fff; border: none; cursor: pointer; }
+    .login-btn:hover { opacity: .9; }
+    .login-err { color: #f87171; font-size: 13px; margin-top: 8px; display: none; }
+
+    /* DASHBOARD */
+    .dashboard { display: none; padding: 1.5rem 1rem 4rem; max-width: 1200px; margin: 0 auto; }
+    .topbar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+    .topbar-left h1 { font-size: 22px; font-weight: 700; color: #fff; }
+    .topbar-left p { font-size: 13px; color: #888; margin-top: 2px; }
+    .refresh-btn { padding: 8px 16px; border-radius: 8px; background: #1a1d27; border: 1px solid #2a2d3a; color: #ccc; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .refresh-btn:hover { border-color: #4f6ef7; color: #fff; }
+
+    /* STATS */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card { background: #1a1d27; border: 1px solid #2a2d3a; border-radius: 12px; padding: 1.25rem; }
+    .stat-label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: .07em; font-weight: 600; margin-bottom: 6px; }
+    .stat-val { font-size: 32px; font-weight: 700; color: #fff; }
+    .stat-sub { font-size: 12px; color: #888; margin-top: 2px; }
+
+    /* SECTION */
+    .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; }
+    .section-title { font-size: 16px; font-weight: 700; color: #fff; }
+    .gender-pill { font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 20px; letter-spacing: .05em; }
+    .pill-m { background: #1e3a6e; color: #93c5fd; }
+    .pill-f { background: #4a1942; color: #f9a8d4; }
+
+    /* RANKING CARDS */
+    .ranking-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+    @media (max-width: 640px) { .ranking-grid { grid-template-columns: 1fr; } }
+    .rank-card { background: #1a1d27; border: 1px solid #2a2d3a; border-radius: 12px; padding: 1.25rem; }
+    .rank-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #1f2235; }
+    .rank-row:last-child { border-bottom: none; }
+    .rank-pos { font-size: 20px; min-width: 32px; }
+    .rank-info { flex: 1; min-width: 0; }
+    .rank-name { font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rank-meta { font-size: 12px; color: #888; }
+    .rank-score { text-align: right; }
+    .rank-total { font-size: 20px; font-weight: 700; color: #4f6ef7; }
+    .rank-avg { font-size: 11px; color: #888; }
+    .rank-bar { height: 3px; border-radius: 2px; margin-top: 4px; background: linear-gradient(90deg, #4f6ef7, #7c3aed); }
+    .rank-1 { background: #1a1d27; border-left: 3px solid #f59e0b; }
+    .rank-2 { background: #1a1d27; border-left: 3px solid #9ca3af; }
+    .rank-3 { background: #1a1d27; border-left: 3px solid #cd7c2f; }
+    .rank-4 { background: #1a1d27; border-left: 3px solid #374151; }
+    .medal { font-size: 18px; }
+
+    /* CRITERIA SECTION */
+    .criteria-wrap { margin-bottom: 2rem; }
+    .criteria-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1rem; }
+    .crit-card { background: #1a1d27; border: 1px solid #2a2d3a; border-radius: 12px; padding: 1.25rem; }
+    .crit-title { font-size: 13px; font-weight: 700; color: #ccc; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: .05em; }
+    .crit-gender-label { font-size: 11px; font-weight: 700; margin-bottom: 8px; }
+    .crit-gender-m { color: #93c5fd; }
+    .crit-gender-f { color: #f9a8d4; }
+    .crit-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+    .crit-rank { font-size: 12px; min-width: 20px; color: #888; }
+    .crit-name { font-size: 13px; color: #ddd; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .crit-bar-wrap { width: 80px; background: #0f1117; border-radius: 4px; height: 6px; }
+    .crit-bar { height: 6px; border-radius: 4px; }
+    .bar-m { background: linear-gradient(90deg, #3b82f6, #4f6ef7); }
+    .bar-f { background: linear-gradient(90deg, #ec4899, #a855f7); }
+    .crit-score { font-size: 12px; color: #888; min-width: 35px; text-align: right; }
+    .crit-divider { border: none; border-top: 1px solid #2a2d3a; margin: 10px 0; }
+
+    .no-data { text-align: center; padding: 3rem; color: #555; font-size: 14px; }
+    .last-updated { font-size: 12px; color: #555; text-align: right; margin-bottom: 1rem; }
+    .live-dot { display: inline-block; width: 8px; height: 8px; background: #22c55e; border-radius: 50%; margin-right: 6px; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">🏆</div>
+    <h2>CBI Nomination Dashboard</h2>
+    <p>Staff of the Quarter — Live Results</p>
+    <input type="password" id="pwd" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')login()"/>
+    <button class="login-btn" onclick="login()">Sign in</button>
+    <div class="login-err" id="login-err">Incorrect password. Try again.</div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>🏆 CBI Staff of the Quarter</h1>
+      <p><span class="live-dot"></span>Live nomination rankings — Q1 2026</p>
+    </div>
+    <button class="refresh-btn" onclick="loadData()">🔄 Refresh</button>
+  </div>
+
+  <div class="stat-grid" id="stats"></div>
+  <div class="last-updated" id="last-updated"></div>
+
+  <!-- OVERALL RANKINGS -->
+  <div class="section-header">
+    <span class="section-title">Overall Rankings</span>
+    <span class="gender-pill pill-m">Top 4 Male</span>
+    <span class="gender-pill pill-f">Top 4 Female</span>
+  </div>
+  <div class="ranking-grid">
+    <div class="rank-card" id="male-overall">
+      <div class="section-header" style="margin-bottom:.75rem">
+        <span class="gender-pill pill-m">MALE</span>
+        <span style="font-size:13px;color:#888">Overall ranking</span>
+      </div>
+      <div class="no-data">No data yet</div>
+    </div>
+    <div class="rank-card" id="female-overall">
+      <div class="section-header" style="margin-bottom:.75rem">
+        <span class="gender-pill pill-f">FEMALE</span>
+        <span style="font-size:13px;color:#888">Overall ranking</span>
+      </div>
+      <div class="no-data">No data yet</div>
+    </div>
+  </div>
+
+  <!-- CRITERIA RANKINGS -->
+  <div class="criteria-wrap">
+    <div class="section-header" style="margin-bottom:1rem">
+      <span class="section-title">Rankings by Criteria</span>
+      <span style="font-size:12px;color:#888">Top 4 per criterion</span>
+    </div>
+    <div class="criteria-grid" id="criteria-grid">
+      <div class="no-data">No data yet</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://rhzdmzbodhoqaywfkftj.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoemRtemJvZGhvcWF5d2ZrZnRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNDM2NjIsImV4cCI6MjA5MTkxOTY2Mn0.2iLDRWCy-JyJNxOgo4w6fQ2MM8Ditdy6YTRjIKQQ5S4';
+  const ADMIN_PASSWORD = 'Asgard1993//';
+
+  const CRITERIA = [
+    { key: 'punctuality', label: 'Punctuality' },
+    { key: 'team_collaboration', label: 'Team Collaboration' },
+    { key: 'service_in_love', label: 'Service In Love' },
+    { key: 'excellence', label: 'Excellence' },
+    { key: 'integrity', label: 'Integrity' }
+  ];
+
+  const MEDALS = ['🥇','🥈','🥉','4️⃣'];
+  const RANK_CLASS = ['rank-1','rank-2','rank-3','rank-4'];
+
+  function login() {
+    if (document.getElementById('pwd').value === ADMIN_PASSWORD) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      loadData();
+      setInterval(loadData, 60000); // auto-refresh every 60s
+    } else {
+      document.getElementById('login-err').style.display = 'block';
+    }
+  }
+
+  async function loadData() {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/ms_nominations?select=*`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) {
+      document.getElementById('stats').innerHTML = `<div class="stat-card"><div class="stat-label">Total nominations</div><div class="stat-val">0</div></div>`;
+      return;
+    }
+    renderAll(data);
+    document.getElementById('last-updated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+  }
+
+  function calcOverall(data, gender) {
+    const scores = {}, counts = {};
+    data.forEach(n => {
+      const name = n[`${gender}_nominee`];
+      if (!name) return;
+      const total = CRITERIA.reduce((s, c) => s + (parseInt(n[`${gender}_${c.key}`]) || 0), 0);
+      scores[name] = (scores[name] || 0) + total;
+      counts[name] = (counts[name] || 0) + 1;
+    });
+    return Object.entries(scores)
+      .map(([name, total]) => ({ name, total, count: counts[name], avg: Math.round(total / counts[name]) }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 4);
+  }
+
+  function calcCriteria(data, gender, criterionKey) {
+    const scores = {}, counts = {};
+    data.forEach(n => {
+      const name = n[`${gender}_nominee`];
+      if (!name) return;
+      const val = parseInt(n[`${gender}_${criterionKey}`]) || 0;
+      scores[name] = (scores[name] || 0) + val;
+      counts[name] = (counts[name] || 0) + 1;
+    });
+    return Object.entries(scores)
+      .map(([name, total]) => ({ name, total, avg: Math.round(total / counts[name]) }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 4);
+  }
+
+  function renderOverall(containerId, rankings, gender) {
+    const el = document.getElementById(containerId);
+    const isPill = gender === 'male';
+    if (!rankings.length) { el.querySelector('.no-data') && (el.innerHTML += ''); return; }
+    const maxScore = rankings[0]?.total || 1;
+    const rows = rankings.map((r, i) => `
+      <div class="rank-row ${RANK_CLASS[i]}">
+        <div class="rank-pos">${MEDALS[i]}</div>
+        <div class="rank-info">
+          <div class="rank-name">${r.name}</div>
+          <div class="rank-meta">${r.count} nomination${r.count>1?'s':''} · avg ${r.avg}</div>
+          <div class="rank-bar" style="width:${Math.round((r.total/maxScore)*100)}%"></div>
+        </div>
+        <div class="rank-score">
+          <div class="rank-total">${r.total}</div>
+          <div class="rank-avg">total pts</div>
+        </div>
+      </div>`).join('');
+
+    const header = `<div class="section-header" style="margin-bottom:.75rem">
+      <span class="gender-pill ${isPill?'pill-m':'pill-f'}">${gender.toUpperCase()}</span>
+      <span style="font-size:13px;color:#888">Overall ranking</span>
+    </div>`;
+    el.innerHTML = header + rows;
+  }
+
+  function renderCriteriaGrid(data) {
+    const grid = document.getElementById('criteria-grid');
+    if (!data.length) { grid.innerHTML = '<div class="no-data">No data yet</div>'; return; }
+
+    grid.innerHTML = CRITERIA.map(c => {
+      const mRanks = calcCriteria(data, 'male', c.key);
+      const fRanks = calcCriteria(data, 'female', c.key);
+      const mMax = mRanks[0]?.total || 1;
+      const fMax = fRanks[0]?.total || 1;
+
+      const mRows = mRanks.map((r, i) => `
+        <div class="crit-row">
+          <span class="crit-rank">${MEDALS[i]}</span>
+          <span class="crit-name" title="${r.name}">${r.name.split(' ')[0]} ${r.name.split(' ')[1]||''}</span>
+          <div class="crit-bar-wrap"><div class="crit-bar bar-m" style="width:${Math.round((r.total/mMax)*80)}px"></div></div>
+          <span class="crit-score">${r.total}</span>
+        </div>`).join('') || '<div style="color:#555;font-size:12px">No data</div>';
+
+      const fRows = fRanks.map((r, i) => `
+        <div class="crit-row">
+          <span class="crit-rank">${MEDALS[i]}</span>
+          <span class="crit-name" title="${r.name}">${r.name.split(' ')[0]} ${r.name.split(' ')[1]||''}</span>
+          <div class="crit-bar-wrap"><div class="crit-bar bar-f" style="width:${Math.round((r.total/fMax)*80)}px"></div></div>
+          <span class="crit-score">${r.total}</span>
+        </div>`).join('') || '<div style="color:#555;font-size:12px">No data</div>';
+
+      return `<div class="crit-card">
+        <div class="crit-title">${c.label}</div>
+        <div class="crit-gender-label crit-gender-m">▲ Male</div>
+        ${mRows}
+        <hr class="crit-divider">
+        <div class="crit-gender-label crit-gender-f">▲ Female</div>
+        ${fRows}
+      </div>`;
+    }).join('');
+  }
+
+  function renderAll(data) {
+    const mRank = calcOverall(data, 'male');
+    const fRank = calcOverall(data, 'female');
+    const mNames = new Set(data.map(n => n.male_nominee).filter(Boolean));
+    const fNames = new Set(data.map(n => n.female_nominee).filter(Boolean));
+
+    document.getElementById('stats').innerHTML = `
+      <div class="stat-card"><div class="stat-label">Total nominations</div><div class="stat-val">${data.length}</div><div class="stat-sub">submissions received</div></div>
+      <div class="stat-card"><div class="stat-label">Male candidates</div><div class="stat-val">${mNames.size}</div><div class="stat-sub">nominated so far</div></div>
+      <div class="stat-card"><div class="stat-label">Female candidates</div><div class="stat-val">${fNames.size}</div><div class="stat-sub">nominated so far</div></div>
+      ${mRank[0] ? `<div class="stat-card"><div class="stat-label">🥇 Leading Male</div><div class="stat-val" style="font-size:18px;margin-top:4px">${mRank[0].name.split(' ')[0]}</div><div class="stat-sub">${mRank[0].total} pts</div></div>` : ''}
+      ${fRank[0] ? `<div class="stat-card"><div class="stat-label">🥇 Leading Female</div><div class="stat-val" style="font-size:18px;margin-top:4px">${fRank[0].name.split(' ')[0]}</div><div class="stat-sub">${fRank[0].total} pts</div></div>` : ''}
+    `;
+
+    renderOverall('male-overall', mRank, 'male');
+    renderOverall('female-overall', fRank, 'female');
+    renderCriteriaGrid(data);
+  }
+</script>
+</body>
+</html>
