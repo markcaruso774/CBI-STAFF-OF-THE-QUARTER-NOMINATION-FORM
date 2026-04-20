@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CBI Staff of the Quarter — Q1 2026 Live Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    :root {
+      --bg-base:#020818;--bg-card:#051530;--bg-card2:#071d3d;--bg-card3:#0a2550;
+      --border:#0e3566;--border-glow:#1a5cb0;--accent:#1a6dff;--accent2:#0ea5e9;
+      --accent-glow:rgba(26,109,255,0.3);--gold:#f59e0b;--silver:#94a3b8;--bronze:#cd7c2f;
+      --male:#38bdf8;--male-glow:rgba(56,189,248,0.2);--female:#f472b6;--female-glow:rgba(244,114,182,0.2);
+      --text:#e2e8f0;--text2:#94a3b8;--text3:#475569;--success:#10b981;
+      --shadow:0 8px 32px rgba(0,0,0,0.5);--shadow-glow:0 0 30px rgba(26,109,255,0.15);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Inter',sans-serif;background:var(--bg-base);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh;overflow-x:hidden;}
+    body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(26,109,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(26,109,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+
+    /* LOGIN */
+    .login-wrap{max-width:420px;margin:8rem auto;padding:1rem;position:relative;z-index:1;}
+    .login-card{background:linear-gradient(135deg,var(--bg-card),var(--bg-card2));border:1px solid var(--border-glow);border-radius:20px;padding:2.5rem;box-shadow:var(--shadow),var(--shadow-glow);}
+    .login-logo{font-size:48px;text-align:center;margin-bottom:1rem;filter:drop-shadow(0 0 20px rgba(245,158,11,0.5));}
+    .login-card h2{font-size:22px;font-weight:800;color:#fff;text-align:center;margin-bottom:4px;}
+    .login-card p{font-size:13px;color:var(--text2);text-align:center;margin-bottom:2rem;}
+    .login-input{width:100%;padding:12px 16px;font-size:14px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,0.04);color:#fff;margin-bottom:1rem;outline:none;font-family:inherit;transition:border-color .2s;}
+    .login-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);}
+    .login-btn{width:100%;padding:12px;font-size:15px;font-weight:700;border-radius:10px;background:linear-gradient(135deg,#1a6dff,#0ea5e9);color:#fff;border:none;cursor:pointer;font-family:inherit;box-shadow:0 4px 20px rgba(26,109,255,0.4);transition:transform .15s,box-shadow .15s;}
+    .login-btn:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(26,109,255,0.5);}
+    .login-err{color:#f87171;font-size:13px;margin-top:8px;text-align:center;display:none;}
+
+    /* DASHBOARD */
+    .dashboard{display:none;padding:0 0 4rem;position:relative;z-index:1;}
+
+    /* HEADER */
+    .dash-header{background:linear-gradient(180deg,rgba(5,21,48,0.98),rgba(2,8,24,0.95));border-bottom:1px solid var(--border);padding:1.25rem 1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;position:sticky;top:0;z-index:10;backdrop-filter:blur(20px);}
+    .dash-header-left h1{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.01em;}
+    .dash-header-left p{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;margin-top:2px;}
+    .live-dot{width:8px;height:8px;background:var(--success);border-radius:50%;display:inline-block;animation:pulse 2s infinite;box-shadow:0 0 8px var(--success);}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+    .upload-mini-btn{padding:8px 16px;background:linear-gradient(135deg,#1a6dff,#0ea5e9);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 2px 10px rgba(26,109,255,0.3);}
+    .upload-mini-status{font-size:12px;color:var(--success);font-weight:500;}
+    input[type="file"]{display:none;}
+
+    /* UPLOAD HERO */
+    .upload-hero{margin:2rem 1.5rem;background:linear-gradient(135deg,var(--bg-card),var(--bg-card2));border:1px dashed var(--border-glow);border-radius:20px;padding:3rem 2rem;text-align:center;cursor:pointer;transition:border-color .2s;box-shadow:var(--shadow);}
+    .upload-hero:hover,.upload-hero.dragover{border-color:var(--accent);background:linear-gradient(135deg,var(--bg-card2),var(--bg-card3));}
+    .upload-hero-icon{font-size:52px;margin-bottom:1rem;filter:drop-shadow(0 0 20px rgba(26,109,255,0.4));}
+    .upload-hero h3{font-size:20px;font-weight:700;color:#fff;margin-bottom:8px;}
+    .upload-hero p{font-size:14px;color:var(--text2);margin-bottom:1.5rem;max-width:400px;margin-left:auto;margin-right:auto;}
+    .upload-hero-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:linear-gradient(135deg,#1a6dff,#0ea5e9);color:#fff;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:inherit;box-shadow:0 4px 20px rgba(26,109,255,0.4);}
+
+    /* CONTENT */
+    .content{padding:1.5rem;}
+
+    /* PROGRESS */
+    .progress-card{background:linear-gradient(135deg,var(--bg-card),var(--bg-card2));border:1px solid var(--border);border-radius:16px;padding:1.5rem;box-shadow:var(--shadow),var(--shadow-glow);position:relative;overflow:hidden;margin-bottom:1.5rem;}
+    .progress-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));}
+    .progress-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
+    .progress-title{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;}
+    .progress-count{font-size:13px;font-weight:700;color:#fff;}
+    .progress-bar-wrap{background:rgba(255,255,255,0.05);border-radius:50px;height:22px;overflow:hidden;position:relative;box-shadow:inset 0 2px 6px rgba(0,0,0,0.4);}
+    .progress-bar-fill{height:100%;border-radius:50px;background:linear-gradient(90deg,#1a6dff,#0ea5e9,#38bdf8);transition:width 1.2s cubic-bezier(.4,0,.2,1);box-shadow:0 0 20px rgba(26,109,255,0.6);position:relative;}
+    .progress-bar-fill::after{content:'';position:absolute;inset:2px;border-radius:50px;background:linear-gradient(180deg,rgba(255,255,255,0.18),transparent);}
+    .progress-bar-shine{position:absolute;top:2px;left:0;right:0;height:9px;background:linear-gradient(180deg,rgba(255,255,255,0.1),transparent);border-radius:50px;pointer-events:none;}
+    .progress-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;}
+    .progress-labels{font-size:11px;color:var(--text3);}
+    .progress-pct{font-size:32px;font-weight:900;background:linear-gradient(135deg,#1a6dff,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+
+    /* STATS */
+    .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:1rem;margin-bottom:1.5rem;}
+    .stat-card{background:linear-gradient(135deg,var(--bg-card),var(--bg-card2));border:1px solid var(--border);border-radius:14px;padding:1.25rem;box-shadow:var(--shadow);position:relative;overflow:hidden;transition:transform .2s;}
+    .stat-card:hover{transform:translateY(-2px);}
+    .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));}
+    .stat-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:8px;}
+    .stat-val{font-size:36px;font-weight:900;color:#fff;line-height:1;}
+    .stat-sub{font-size:12px;color:var(--text3);margin-top:4px;}
+
+    /* SECTION HEADER */
+    .section-hdr{display:flex;align-items:center;gap:10px;margin-bottom:1rem;}
+    .section-hdr-title{font-size:15px;font-weight:800;color:#fff;}
+    .tag{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.04em;}
+    .tag-m{background:var(--male-glow);color:var(--male);border:1px solid rgba(56,189,248,0.3);}
+    .tag-f{background:var(--female-glow);color:var(--female);border:1px solid rgba(244,114,182,0.3);}
+    .tag-n{background:rgba(255,255,255,0.06);color:var(--text2);border:1px solid var(--border);}
+
+    /* RANKINGS */
+    .ranking-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.5rem;}
+    @media(max-width:640px){.ranking-grid{grid-template-columns:1fr;}}
+    .rank-card{background:linear-gradient(135deg,var(--bg-card),var(--bg-card2));border:1px solid var(--border);border-radius:16px;padding:1.25rem;box-shadow:var(--shadow);overflow:hidden;}
+    .rank-card-m{border-top:2px solid var(--male);box-shadow:var(--shadow),0 0 30px var(--male-glow);}
+    .rank-card-f{border-top:2px solid var(--female);box-shadow:var(--shadow),0 0 30px var(--female-glow);}
+    .rank-card-hdr{display:flex;align-items:center;gap:8px;margin-bottom:1rem;padding-bottom:10px;border-bottom:1px solid var(--border);}
+    .rank-card-title{font-size:12px;font-weight:700;color:var(--text2);}
+    .rank-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:6px;}
+    .rr1{background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(245,158,11,0.05));border:1px solid rgba(245,158,11,0.2);}
+    .rr2{background:linear-gradient(135deg,rgba(148,163,184,0.08),rgba(148,163,184,0.04));border:1px solid rgba(148,163,184,0.15);}
+    .rr3{background:linear-gradient(135deg,rgba(205,124,47,0.08),rgba(205,124,47,0.04));border:1px solid rgba(205,124,47,0.15);}
+    .rr4{background:rgba(255,255,255,0.02);border:1px solid var(--border);}
+    .rank-medal{font-size:20px;min-width:28px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));}
+    .rank-info{flex:1;min-width:0;}
+    .rank-name{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .rank-meta{font-size:11px;color:var(--text3);margin-top:1px;}
+    .rank-bar-bg{background:rgba(255,255,255,0.05);border-radius:4px;height:4px;margin-top:5px;}
+    .rbar-m{height:4px;border-radius:4px;background:linear-gradient(90deg,#1a6dff,#38bdf8);box-shadow:0 0 6px rgba(56,189,248,0.5);}
+    .rbar-f{height:4px;border-radius:4px;background:linear-gradient(90deg,#ec4899,#f472b6);box-shadow:0 0 6px rgba(244,114,182,0.5);}
+    .rank-score{text-align:right;min-width:44px;}
+    .rank-num{font-size:22px;font-weight:900;line-height:1;}
+    .rnum-m{color:var(--male);text-shadow:0 0 10px var(--male);}
+    .rnum-f{color:var(--female);text-shadow:0 0 10px var(--female);}
+    .rank-lbl{font-size:10px;color:var(--text3);}
+
+    /* CHART */
+    .chart-card{background:linear-gradient(135deg,var(--bg-card),var(--bg-card2));border:1px solid var(--border);border-radius:16px;padding:1.25rem;box-shadow:var(--shadow);margin-bottom:1.5rem;}
+    .chart-wrap{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+    @media(max-width:640px){.chart-wrap{grid-template-columns:1fr;}}
+    .chart-half-title{font-size:12px;font-weight:700;margin-bottom:12px;}
+    .cht-m{color:var(--male);} .cht-f{color:var(--female);}
+    .chart-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+    .chart-bar-label{font-size:12px;color:var(--text);width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;}
+    .chart-bar-track{flex:1;background:rgba(255,255,255,0.05);border-radius:6px;height:20px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,0.3);}
+    .cbar-m{height:100%;background:linear-gradient(90deg,#1a6dff,#38bdf8);border-radius:6px;box-shadow:0 0 10px rgba(56,189,248,0.3);transition:width 1s cubic-bezier(.4,0,.2,1);position:relative;}
+    .cbar-f{height:100%;background:linear-gradient(90deg,#9333ea,#f472b6);border-radius:6px;box-shadow:0 0 10px rgba(244,114,182,0.3);transition:width 1s cubic-bezier(.4,0,.2,1);position:relative;}
+    .cbar-m::after,.cbar-f::after{content:'';position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(180deg,rgba(255,255,255,0.15),transparent);border-radius:6px;}
+    .chart-bar-val{font-size:12px;font-weight:700;color:#fff;min-width:16px;text-align:right;}
+
+    /* CRITERIA */
+    .criteria-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:1rem;margin-bottom:1.5rem;}
+    .crit-card{background:linear-gradient(135deg,var(--bg-card),var(--bg-card2));border:1px solid var(--border);border-radius:14px;padding:1.25rem;box-shadow:var(--shadow);}
+    .crit-title{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:1rem;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;}
+    .crit-title::before{content:'';width:3px;height:14px;background:linear-gradient(180deg,var(--accent),var(--accent2));border-radius:2px;display:inline-block;}
+    .crit-gender-lbl{font-size:11px;font-weight:700;margin-bottom:8px;}
+    .crit-m{color:var(--male);} .crit-f{color:var(--female);}
+    .crit-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+    .crit-medal{font-size:13px;min-width:20px;}
+    .crit-name{font-size:12px;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .crit-bar-track{width:55px;background:rgba(255,255,255,0.05);border-radius:4px;height:5px;}
+    .cbar-crit-m{height:5px;border-radius:4px;background:linear-gradient(90deg,#1a6dff,#38bdf8);box-shadow:0 0 4px rgba(56,189,248,0.4);}
+    .cbar-crit-f{height:5px;border-radius:4px;background:linear-gradient(90deg,#9333ea,#f472b6);box-shadow:0 0 4px rgba(244,114,182,0.4);}
+    .crit-score{font-size:12px;font-weight:700;color:var(--text2);min-width:34px;text-align:right;}
+    .crit-divider{border:none;border-top:1px solid var(--border);margin:10px 0;}
+
+    /* DEPT */
+    .dept-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.5rem;}
+    @media(max-width:640px){.dept-grid{grid-template-columns:1fr;}}
+    .dept-card{background:linear-gradient(135deg,var(--bg-card),var(--bg-card2));border:1px solid var(--border);border-radius:14px;padding:1.25rem;box-shadow:var(--shadow);}
+    .dept-card-title{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:1rem;padding-bottom:8px;border-bottom:1px solid var(--border);}
+    .dept-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+    .dept-name{font-size:12px;color:var(--text);width:125px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .dept-bar-track{flex:1;background:rgba(255,255,255,0.05);border-radius:4px;height:16px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,0.3);}
+    .dept-bar-fill{height:100%;background:linear-gradient(90deg,#1a6dff,#0ea5e9);border-radius:4px;box-shadow:0 0 8px rgba(26,109,255,0.3);transition:width .8s cubic-bezier(.4,0,.2,1);position:relative;}
+    .dept-bar-fill::after{content:'';position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(180deg,rgba(255,255,255,0.15),transparent);}
+    .dept-count{font-size:12px;font-weight:700;color:#fff;min-width:20px;text-align:right;}
+
+    /* NOT VOTED */
+    .not-voted-card{background:linear-gradient(135deg,var(--bg-card),var(--bg-card2));border:1px solid var(--border);border-radius:14px;padding:1.25rem;box-shadow:var(--shadow);margin-bottom:1.5rem;}
+    .not-voted-title{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:1rem;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+    .not-voted-badge{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.2);padding:2px 8px;border-radius:20px;font-size:11px;}
+    .not-voted-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px;max-height:240px;overflow-y:auto;}
+    .not-voted-grid::-webkit-scrollbar{width:4px;}
+    .not-voted-grid::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+    .not-voted-name{font-size:12px;color:var(--text2);background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:6px;padding:6px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+    .sec-divider{border:none;border-top:1px solid var(--border);margin:1.5rem 0;}
+    .hidden{display:none;}
+    ::-webkit-scrollbar{width:6px;}
+    ::-webkit-scrollbar-track{background:var(--bg-base);}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">🏆</div>
+    <h2>CBI Nomination Dashboard</h2>
+    <p>Staff of the Quarter — Q1 2026 · Admin Access</p>
+    <input class="login-input" type="password" id="pwd" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')login()"/>
+    <button class="login-btn" onclick="login()">Sign In</button>
+    <div class="login-err" id="login-err">Incorrect password. Try again.</div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
+  <div class="dash-header">
+    <div class="dash-header-left">
+      <h1>🏆 CBI Staff of the Quarter — Q1 2026</h1>
+      <p><span class="live-dot"></span>Live Nomination Dashboard</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="upload-mini-status hidden" id="mini-status"></span>
+      <button class="upload-mini-btn" onclick="document.getElementById('file-input').click()">📂 Upload New Excel</button>
+    </div>
+  </div>
+
+  <div class="upload-hero" id="upload-hero" onclick="document.getElementById('file-input').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+    <div class="upload-hero-icon">📊</div>
+    <h3>Upload Nomination Responses</h3>
+    <p>Download the latest Excel file from Microsoft Forms and upload it here to see live rankings and full analytics</p>
+    <button class="upload-hero-btn" onclick="event.stopPropagation();document.getElementById('file-input').click()">📂 Choose Excel File</button>
+  </div>
+  <input type="file" id="file-input" accept=".xlsx,.xls" onchange="handleFile(event)"/>
+
+  <div class="content hidden" id="main-content">
+
+    <!-- PROGRESS -->
+    <div class="progress-card">
+      <div class="progress-header">
+        <span class="progress-title">📊 Nomination Participation Progress</span>
+        <span class="progress-count" id="progress-count">0 / 104 staff have nominated</span>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progress-fill" style="width:0%">
+          <div class="progress-bar-shine"></div>
+        </div>
+      </div>
+      <div class="progress-footer">
+        <span class="progress-labels">0 nominations</span>
+        <span class="progress-pct" id="progress-pct">0%</span>
+        <span class="progress-labels">104 staff</span>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stat-grid" id="stats-grid"></div>
+
+    <!-- RANKINGS -->
+    <div class="section-hdr">
+      <span class="section-hdr-title">Overall Rankings</span>
+      <span class="tag tag-m">Top 4 Male</span>
+      <span class="tag tag-f">Top 4 Female</span>
+      <span class="tag tag-n" style="font-size:10px">Nominations count · Avg % as tiebreaker</span>
+    </div>
+    <div class="ranking-grid">
+      <div class="rank-card rank-card-m" id="male-overall"></div>
+      <div class="rank-card rank-card-f" id="female-overall"></div>
+    </div>
+
+    <!-- CHART -->
+    <div class="section-hdr"><span class="section-hdr-title">Nomination Count — Bar Chart</span></div>
+    <div class="chart-card">
+      <div class="chart-wrap">
+        <div><div class="chart-half-title cht-m">▲ Male Nominees</div><div id="chart-male"></div></div>
+        <div><div class="chart-half-title cht-f">▲ Female Nominees</div><div id="chart-female"></div></div>
+      </div>
+    </div>
+
+    <!-- CRITERIA -->
+    <div class="section-hdr">
+      <span class="section-hdr-title">Rankings by Criteria</span>
+      <span class="tag tag-n">Top 4 per criterion · Avg %</span>
+    </div>
+    <div class="criteria-grid" id="criteria-grid"></div>
+
+    <div class="sec-divider"></div>
+
+    <!-- DEPARTMENTS -->
+    <div class="section-hdr"><span class="section-hdr-title">Department Breakdown</span></div>
+    <div class="dept-grid">
+      <div class="dept-card"><div class="dept-card-title">📤 Nominations sent from dept</div><div id="dept-from"></div></div>
+      <div class="dept-card"><div class="dept-card-title">📥 Nominations received by dept</div><div id="dept-to"></div></div>
+    </div>
+
+    <!-- NOT VOTED -->
+    <div class="not-voted-card">
+      <div class="not-voted-title">
+        <span>⏳ Staff Who Have Not Yet Nominated</span>
+        <span class="not-voted-badge" id="not-voted-count">0 remaining</span>
+      </div>
+      <div class="not-voted-grid" id="not-voted-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const ADMIN_PASSWORD='Asgard1993//';
+const MEDALS=['🥇','🥈','🥉','4️⃣'];
+const RRC=['rr1','rr2','rr3','rr4'];
+const ALL_STAFF=["Abana Dauda","Abraham Albert Alvans","Ameh Patience Enechojo","Amos Musa","Ashiltiya Stanley","Augustine Oluwole","Baba Kaka","Benedict Osita","Binta Muhammad Yahya","Blessed Joseph","Blessing Ogar Akpana","Borobu Sanctus Godiya","Bulus Ibrahim","Charity Mutah","Chioma Iwuji","Christiana Daniel","Daniel Benson","Daniel Gbenga","Dauda Tumba","Deborah Oye","Dorcas Ehi Omajali","Dorcas Samuel","El-raham Mbursa","Emmanuel Raphael","Eric Echaru","Esther Bello","Faith Affuafor","Faith Nnadi","Favour Ekor","Favour Igho Iyare","Funmi Adekoba","Gideon Ogbonna Okpuna","Gordon Okelinga","Grace Ahonkhai","Haruna Mbursa","Holman Emmanuel Samuel","Hyelafia Sani Hassan","Ibrahim Zephaniah","Irene Terrah Ozin","Isaac Esi Ogbu","Isaiah Usman Ikwuntole","Isaiah Yakubu","Isuwa Bitrus Kashimbe","JEREMIAH ADESIYAN","Jeremiah Ebere","Jonga Ishaku","Joseph Bayo Alakoba","Joy Joseph","Kehinde Samuel","Kenneth Priscilla","Kofianan Anthony","Lois Kenneth","Lydia Maina","MARTA MATHEW","MOSES CHALAREY","Margaret Balami","Mathew Bubari","Meno Kadakufo","Mercy Oche","Mercy Solomon","Midokpe Eugene","Miracle Edeh","Modupe Omowunmi Wasiu","Muhammad Alhaji Muhammad","Nana Abdu","Nkebuisi Chisom","Nrior Jonah Renner","Oche Job","Ogunleye Ifeolouwa Micheal","Okpe Ngbede Caleb","Omale Gabriel","Patience Okandua","Peace Sunday","Peter Bassey","Phebe Nikes","Philip Abagu","Precious Chidi","Promise Ephraim","Promise Isaac","Rachel Luka","Rebecca Michael","Rejoice Ishaya","Rejoice Zubairu","Ruth Eshomomoh","SAMUEL PRECIOUS","SUSANNA IJACHI OGWA","Salvation Nimrod","Shamgar Idegwu","Signs Archibong","Sinabo Matthew","Sinomi Matthew Bubari","Sokoga Victor Ategbe","Stephen Bako","Sulaiman Abubakar Yakubu","Susan Bitrus","Talatu Kambasaya","Ugochuckwu David Ewele","Usman Vivian Songden","Victoria Ayinde Anu","Vincent Venant","Williams Ede","Yaga Ahmadu Maiva","Yakubu A. Olugbenga","Zubairu Ibrahim"];
+const CRITERIA=[
+  {label:'Punctuality',mKey:'Punctuality',fKey:'PUNCTUALITY_FEMALE'},
+  {label:'Team Collaboration',mKey:'Team Collaboration2',fKey:'Team Collaboration'},
+  {label:'Service In Love',mKey:'Service In Love2',fKey:'Service In Love'},
+  {label:'Excellence',mKey:'Excellence2',fKey:'Excellence'},
+  {label:'Integrity',mKey:'Integrity2',fKey:'Integrity'}
+];
+
+function login(){
+  if(document.getElementById('pwd').value===ADMIN_PASSWORD){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('dashboard').style.display='block';
+  }else{document.getElementById('login-err').style.display='block';}
+}
+function dragOver(e){e.preventDefault();document.getElementById('upload-hero').classList.add('dragover');}
+function dragLeave(){document.getElementById('upload-hero').classList.remove('dragover');}
+function dropFile(e){e.preventDefault();dragLeave();const f=e.dataTransfer.files[0];if(f)processFile(f);}
+function handleFile(e){const f=e.target.files[0];if(f)processFile(f);}
+function parseScore(v){return parseInt(String(v||'').replace('%','').trim())||0;}
+
+function processFile(file){
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const raw=XLSX.utils.sheet_to_json(ws,{defval:''});
+      if(!raw.length)return;
+      const data=raw.map(row=>{
+        const nr={};
+        const keys=Object.keys(row);
+        keys.forEach(k=>{nr[k.trim().replace(/[\n\r]/g,'')]=row[k];});
+        const fPK=keys.find(k=>k.includes('Punctuality')&&/[\n\r]/.test(k));
+        const mPK=keys.find(k=>k.trim()==='Punctuality'&&!/[\n\r]/.test(k));
+        if(fPK)nr['PUNCTUALITY_FEMALE']=row[fPK];
+        if(mPK)nr['Punctuality']=row[mPK];
+        return nr;
+      });
+      document.getElementById('upload-hero').classList.add('hidden');
+      document.getElementById('main-content').classList.remove('hidden');
+      const ms=document.getElementById('mini-status');
+      ms.textContent=`✅ ${data.length} responses · ${new Date().toLocaleTimeString()}`;
+      ms.classList.remove('hidden');
+      renderAll(data);
+    }catch(err){console.error(err);alert('Error reading file.');}
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function calcOverall(data,gender){
+  const scores={},counts={};
+  const nk=gender==='male'?'Male Nominee (Select Male Colleague)':'Female Nominee (Select Female Colleague)';
+  const ck=gender==='male'?['Punctuality','Team Collaboration2','Service In Love2','Excellence2','Integrity2']:['PUNCTUALITY_FEMALE','Team Collaboration','Service In Love','Excellence','Integrity'];
+  data.forEach(r=>{const n=String(r[nk]||'').trim();if(!n)return;const t=ck.reduce((s,k)=>s+parseScore(r[k]),0);scores[n]=(scores[n]||0)+t;counts[n]=(counts[n]||0)+1;});
+  return Object.entries(scores).map(([name,total])=>({name,count:counts[name],avg:Math.round(total/counts[name]/5)})).sort((a,b)=>b.count-a.count||b.avg-a.avg).slice(0,4);
+}
+function calcAllNominees(data,gender){
+  const counts={};const nk=gender==='male'?'Male Nominee (Select Male Colleague)':'Female Nominee (Select Female Colleague)';
+  data.forEach(r=>{const n=String(r[nk]||'').trim();if(n)counts[n]=(counts[n]||0)+1;});
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+}
+function calcCriteria(data,gender,mKey,fKey){
+  const scores={},counts={};
+  const nk=gender==='male'?'Male Nominee (Select Male Colleague)':'Female Nominee (Select Female Colleague)';
+  const sk=gender==='male'?mKey:fKey;
+  data.forEach(r=>{const n=String(r[nk]||'').trim();if(!n)return;scores[n]=(scores[n]||0)+parseScore(r[sk]);counts[n]=(counts[n]||0)+1;});
+  return Object.entries(scores).map(([name,total])=>({name,avg:Math.round(total/(counts[name]||1))})).sort((a,b)=>b.avg-a.avg).slice(0,4);
+}
+
+function renderOverall(id,rankings,gender){
+  const isMale=gender==='male';
+  const maxC=rankings[0]?.count||1;
+  const hdr=`<div class="rank-card-hdr"><span class="tag ${isMale?'tag-m':'tag-f'}">${isMale?'MALE':'FEMALE'}</span><span class="rank-card-title">Overall ranking by nominations</span></div>`;
+  const rows=rankings.map((r,i)=>`
+    <div class="rank-row ${RRC[i]}">
+      <div class="rank-medal">${MEDALS[i]}</div>
+      <div class="rank-info">
+        <div class="rank-name">${r.name}</div>
+        <div class="rank-meta">Avg score: ${r.avg}% per criterion</div>
+        <div class="rank-bar-bg"><div class="${isMale?'rbar-m':'rbar-f'}" style="width:${Math.round((r.count/maxC)*100)}%"></div></div>
+      </div>
+      <div class="rank-score">
+        <div class="rank-num ${isMale?'rnum-m':'rnum-f'}">${r.count}</div>
+        <div class="rank-lbl">nomination${r.count>1?'s':''}</div>
+      </div>
+    </div>`).join('');
+  document.getElementById(id).innerHTML=hdr+(rows||'<div style="color:var(--text3);padding:1rem;font-size:13px">No data yet</div>');
+}
+
+function renderChart(data){
+  const mAll=calcAllNominees(data,'male').slice(0,8);
+  const fAll=calcAllNominees(data,'female').slice(0,8);
+  const mMax=mAll[0]?.[1]||1,fMax=fAll[0]?.[1]||1;
+  document.getElementById('chart-male').innerHTML=mAll.map(([n,c])=>`<div class="chart-bar-row"><div class="chart-bar-label" title="${n}">${n.split(' ')[0]} ${n.split(' ')[1]||''}</div><div class="chart-bar-track"><div class="cbar-m" style="width:${Math.round((c/mMax)*100)}%"></div></div><div class="chart-bar-val">${c}</div></div>`).join('');
+  document.getElementById('chart-female').innerHTML=fAll.map(([n,c])=>`<div class="chart-bar-row"><div class="chart-bar-label" title="${n}">${n.split(' ')[0]} ${n.split(' ')[1]||''}</div><div class="chart-bar-track"><div class="cbar-f" style="width:${Math.round((c/fMax)*100)}%"></div></div><div class="chart-bar-val">${c}</div></div>`).join('');
+}
+
+function renderCriteria(data){
+  document.getElementById('criteria-grid').innerHTML=CRITERIA.map(c=>{
+    const mR=calcCriteria(data,'male',c.mKey,c.fKey);
+    const fR=calcCriteria(data,'female',c.mKey,c.fKey);
+    const mMax=mR[0]?.avg||1,fMax=fR[0]?.avg||1;
+    const mRows=mR.map((r,i)=>`<div class="crit-row"><span class="crit-medal">${MEDALS[i]}</span><span class="crit-name" title="${r.name}">${r.name}</span><div class="crit-bar-track"><div class="cbar-crit-m" style="width:${Math.round((r.avg/mMax)*55)}px"></div></div><span class="crit-score">${r.avg}%</span></div>`).join('')||'<div style="color:var(--text3);font-size:12px">No data</div>';
+    const fRows=fR.map((r,i)=>`<div class="crit-row"><span class="crit-medal">${MEDALS[i]}</span><span class="crit-name" title="${r.name}">${r.name}</span><div class="crit-bar-track"><div class="cbar-crit-f" style="width:${Math.round((r.avg/fMax)*55)}px"></div></div><span class="crit-score">${r.avg}%</span></div>`).join('')||'<div style="color:var(--text3);font-size:12px">No data</div>';
+    return `<div class="crit-card"><div class="crit-title">${c.label}</div><div class="crit-gender-lbl crit-m">▲ Male</div>${mRows}<div class="crit-divider"></div><div class="crit-gender-lbl crit-f">▲ Female</div>${fRows}</div>`;
+  }).join('');
+}
+
+function renderDepts(data){
+  const from={},toM={},toF={};
+  data.forEach(r=>{
+    const dept=String(r['Your Sector/Thematic Unit']||r['Your Sector/ Thematic Unit']||r['Sector/Thematic Unit']||r['Sector']||'Unknown').trim();
+    const ms=String(r["Male Nominee's Sector/Thematic Unit"]||'Unknown').trim();
+    const fs=String(r["Female Nominee's Sector/Thematic unit"]||'Unknown').trim();
+    from[dept]=(from[dept]||0)+1;
+    toM[ms]=(toM[ms]||0)+1;
+    toF[fs]=(toF[fs]||0)+1;
+  });
+  const fS=Object.entries(from).sort((a,b)=>b[1]-a[1]);
+  const merged={};
+  Object.entries(toM).forEach(([k,v])=>merged[k]=(merged[k]||0)+v);
+  Object.entries(toF).forEach(([k,v])=>merged[k]=(merged[k]||0)+v);
+  const tS=Object.entries(merged).sort((a,b)=>b[1]-a[1]);
+  const fMax=fS[0]?.[1]||1,tMax=tS[0]?.[1]||1;
+  document.getElementById('dept-from').innerHTML=fS.map(([d,c])=>`<div class="dept-row"><div class="dept-name" title="${d}">${d}</div><div class="dept-bar-track"><div class="dept-bar-fill" style="width:${Math.round((c/fMax)*100)}%"></div></div><div class="dept-count">${c}</div></div>`).join('')||'<div style="color:var(--text3);font-size:12px">No data</div>';
+  document.getElementById('dept-to').innerHTML=tS.map(([d,c])=>`<div class="dept-row"><div class="dept-name" title="${d}">${d}</div><div class="dept-bar-track"><div class="dept-bar-fill" style="width:${Math.round((c/tMax)*100)}%"></div></div><div class="dept-count">${c}</div></div>`).join('')||'<div style="color:var(--text3);font-size:12px">No data</div>';
+}
+
+function renderNotVoted(data){
+  const voted=new Set(data.map(r=>String(r['Your name (nominator)']||'').trim().toLowerCase()));
+  const nv=ALL_STAFF.filter(n=>!voted.has(n.toLowerCase()));
+  document.getElementById('not-voted-count').textContent=`${nv.length} remaining`;
+  document.getElementById('not-voted-list').innerHTML=nv.length?nv.map(n=>`<div class="not-voted-name">${n}</div>`).join(''):'<div style="color:var(--success);font-size:13px;font-weight:600">🎉 All staff have nominated!</div>';
+}
+
+function renderProgress(data){
+  const voted=new Set(data.map(r=>String(r['Your name (nominator)']||'').trim().toLowerCase()));
+  const count=ALL_STAFF.filter(n=>voted.has(n.toLowerCase())).length;
+  const pct=Math.round((count/104)*100);
+  document.getElementById('progress-count').textContent=`${count} of 104 staff have nominated`;
+  document.getElementById('progress-fill').style.width=pct+'%';
+  document.getElementById('progress-pct').textContent=pct+'%';
+}
+
+function renderStats(data){
+  const mN=new Set(data.map(r=>String(r['Male Nominee (Select Male Colleague)']||'').trim()).filter(Boolean));
+  const fN=new Set(data.map(r=>String(r['Female Nominee (Select Female Colleague)']||'').trim()).filter(Boolean));
+  const mR=calcOverall(data,'male');const fR=calcOverall(data,'female');
+  const voted=new Set(data.map(r=>String(r['Your name (nominator)']||'').trim().toLowerCase()));
+  const vc=ALL_STAFF.filter(n=>voted.has(n.toLowerCase())).length;
+  document.getElementById('stats-grid').innerHTML=`
+    <div class="stat-card"><div class="stat-label">Total submissions</div><div class="stat-val">${data.length}</div><div class="stat-sub">nominations received</div></div>
+    <div class="stat-card"><div class="stat-label">Staff participated</div><div class="stat-val">${vc}</div><div class="stat-sub">of 104 eligible</div></div>
+    <div class="stat-card"><div class="stat-label">Male candidates</div><div class="stat-val">${mN.size}</div><div class="stat-sub">nominated so far</div></div>
+    <div class="stat-card"><div class="stat-label">Female candidates</div><div class="stat-val">${fN.size}</div><div class="stat-sub">nominated so far</div></div>
+    ${mR[0]?`<div class="stat-card"><div class="stat-label">🥇 Leading Male</div><div class="stat-val" style="font-size:17px;margin-top:6px">${mR[0].name.split(' ')[0]}</div><div class="stat-sub">${mR[0].count} nomination${mR[0].count>1?'s':''} · ${mR[0].avg}% avg</div></div>`:''}
+    ${fR[0]?`<div class="stat-card"><div class="stat-label">🥇 Leading Female</div><div class="stat-val" style="font-size:17px;margin-top:6px">${fR[0].name.split(' ')[0]}</div><div class="stat-sub">${fR[0].count} nomination${fR[0].count>1?'s':''} · ${fR[0].avg}% avg</div></div>`:''}`;
+}
+
+function renderAll(data){
+  renderProgress(data);
+  renderStats(data);
+  renderOverall('male-overall',calcOverall(data,'male'),'male');
+  renderOverall('female-overall',calcOverall(data,'female'),'female');
+  renderChart(data);
+  renderCriteria(data);
+  renderDepts(data);
+  renderNotVoted(data);
+}
+</script>
+</body>
+</html>
