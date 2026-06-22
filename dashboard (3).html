@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CBI Staff of the Quarter — Q2 2026 · Final Results</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+:root{
+  --bg:#020818;--card:#071d3d;--card2:#0a2550;--border:#1a4a8a;--borderg:#2d7adb;
+  --accent:#3d8eff;--accent2:#2bbcf5;--aglow:rgba(26,109,255,0.3);
+  --male:#60d4ff;--maleg:rgba(56,189,248,0.15);
+  --female:#fb7fc8;--femaleg:rgba(244,114,182,0.15);
+  --text:#f8fafc;--text2:#cbd5e1;--text3:#94a3b8;
+  --gold:#f59e0b;--silver:#94a3b8;--bronze:#cd7c2f;
+  --success:#10b981;
+  --shadow:0 8px 32px rgba(0,0,0,0.5);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(26,109,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(26,109,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+
+/* LOGIN */
+.login-wrap{max-width:400px;margin:8rem auto;padding:1rem;position:relative;z-index:1;}
+.login-card{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--borderg);border-radius:20px;padding:2.5rem;box-shadow:var(--shadow),0 0 40px rgba(26,109,255,0.15);}
+.login-icon{font-size:52px;text-align:center;margin-bottom:1rem;filter:drop-shadow(0 0 20px rgba(245,158,11,0.5));}
+.login-card h2{font-size:22px;font-weight:800;color:#fff;text-align:center;margin-bottom:4px;}
+.login-card p{font-size:13px;color:var(--text2);text-align:center;margin-bottom:2rem;}
+.login-input{width:100%;padding:12px 16px;font-size:14px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,0.04);color:#fff;margin-bottom:1rem;outline:none;font-family:inherit;transition:border-color .2s;}
+.login-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--aglow);}
+.login-btn{width:100%;padding:12px;font-size:15px;font-weight:700;border-radius:10px;background:linear-gradient(135deg,#1a6dff,#0ea5e9);color:#fff;border:none;cursor:pointer;font-family:inherit;box-shadow:0 4px 20px rgba(26,109,255,0.4);transition:opacity .15s;}
+.login-btn:hover{opacity:.9;}
+.login-err{color:#f87171;font-size:13px;margin-top:8px;text-align:center;display:none;}
+
+/* DASHBOARD */
+.dash{display:none;padding:0 0 4rem;position:relative;z-index:1;}
+
+/* TOPBAR */
+.topbar{background:rgba(5,21,48,0.97);border-bottom:1px solid var(--border);padding:1rem 1.25rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:50;backdrop-filter:blur(20px);}
+.topbar-left h1{font-size:17px;font-weight:800;color:#ffffff;text-shadow:0 0 10px rgba(255,255,255,0.2);}
+.topbar-left p{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;margin-top:2px;}
+.live-dot{width:7px;height:7px;background:var(--success);border-radius:50%;display:inline-block;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.upload-btn-sm{padding:7px 14px;background:linear-gradient(135deg,#1a6dff,#0ea5e9);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
+.mini-status{font-size:12px;color:var(--success);font-weight:500;}
+input[type=file]{display:none;}
+
+/* UPLOAD HERO */
+.upload-hero{margin:2rem 1.25rem;background:linear-gradient(135deg,var(--card),var(--card2));border:1px dashed var(--borderg);border-radius:20px;padding:3rem 2rem;text-align:center;cursor:pointer;transition:border-color .2s;}
+.upload-hero:hover,.upload-hero.dragover{border-color:var(--accent);}
+.upload-hero-icon{font-size:52px;margin-bottom:1rem;}
+.upload-hero h3{font-size:20px;font-weight:700;color:#fff;margin-bottom:8px;}
+.upload-hero p{font-size:14px;color:var(--text2);margin-bottom:1.5rem;max-width:400px;margin-left:auto;margin-right:auto;}
+.upload-hero-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:linear-gradient(135deg,#1a6dff,#0ea5e9);color:#fff;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:inherit;box-shadow:0 4px 20px rgba(26,109,255,0.4);}
+
+/* CONTENT */
+.content{padding:1.25rem;}
+
+/* WINNERS BANNER */
+.winners-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.5rem;}
+@media(max-width:600px){.winners-grid{grid-template-columns:1fr;}}
+.winner-card{border-radius:18px;padding:1.75rem 1.25rem;text-align:center;position:relative;overflow:hidden;}
+.winner-card-m{background:linear-gradient(135deg,rgba(26,109,255,0.15),rgba(14,165,233,0.1));border:2px solid var(--male);box-shadow:0 0 40px rgba(56,189,248,0.2),var(--shadow);}
+.winner-card-f{background:linear-gradient(135deg,rgba(147,51,234,0.15),rgba(244,114,182,0.1));border:2px solid var(--female);box-shadow:0 0 40px rgba(244,114,182,0.2),var(--shadow);}
+.winner-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.winner-card-m::before{background:linear-gradient(90deg,#1a6dff,#38bdf8);}
+.winner-card-f::before{background:linear-gradient(90deg,#9333ea,#f472b6);}
+.winner-crown{font-size:40px;margin-bottom:.5rem;filter:drop-shadow(0 0 12px rgba(245,158,11,0.7));animation:float 3s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.winner-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.5rem;}
+.winner-label-m{color:#7de4ff;}
+.winner-label-f{color:#fd9fd3;}
+.winner-name{font-size:24px;font-weight:900;color:#ffffff;text-shadow:0 0 20px rgba(255,255,255,0.3);margin-bottom:.4rem;line-height:1.2;}
+.winner-noms{font-size:13px;font-weight:600;margin-bottom:.25rem;}
+.winner-noms-m{color:#7de4ff;}
+.winner-noms-f{color:#fd9fd3;}
+.winner-sub{font-size:12px;color:var(--text3);}
+.winner-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(245,158,11,0.25);border:1px solid rgba(245,158,11,0.7);color:#fbbf24;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-top:.6rem;letter-spacing:.04em;}
+
+/* STATS */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-bottom:1.25rem;}
+.stat-card{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:12px;padding:1rem;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));}
+.stat-lbl{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:6px;}
+.stat-val{font-size:30px;font-weight:900;color:#ffffff;line-height:1;}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:4px;}
+
+/* SECTION */
+.sec-hdr{display:flex;align-items:center;gap:8px;margin-bottom:1rem;}
+.sec-title{font-size:15px;font-weight:800;color:#ffffff;text-shadow:0 0 10px rgba(255,255,255,0.15);}
+.tag{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;}
+.tag-m{background:rgba(56,189,248,0.2);color:#7de4ff;border:1px solid rgba(56,189,248,0.3);}
+.tag-f{background:rgba(244,114,182,0.2);color:#fd9fd3;border:1px solid rgba(244,114,182,0.3);}
+.tag-n{background:rgba(255,255,255,0.08);color:#cbd5e1;border:1px solid var(--border);}
+
+/* RANKINGS */
+.rank-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;margin-bottom:1.25rem;}
+@media(max-width:600px){.rank-grid{grid-template-columns:1fr;}}
+.rank-card{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:14px;padding:1.1rem;overflow:hidden;}
+.rank-card-m{border-top:2px solid var(--male);}
+.rank-card-f{border-top:2px solid var(--female);}
+.rank-card-hdr{display:flex;align-items:center;gap:8px;margin-bottom:1rem;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.rank-card-title{font-size:12px;font-weight:600;color:var(--text2);}
+.rank-row{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;margin-bottom:5px;cursor:pointer;transition:opacity .15s;}
+.rank-row:hover{opacity:.8;}
+.rr1{background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(245,158,11,.06));border:1px solid rgba(245,158,11,.25);}
+.rr2{background:linear-gradient(135deg,rgba(148,163,184,.08),rgba(148,163,184,.04));border:1px solid rgba(148,163,184,.15);}
+.rr3{background:linear-gradient(135deg,rgba(205,124,47,.08),rgba(205,124,47,.04));border:1px solid rgba(205,124,47,.15);}
+.rrow-rest{background:rgba(255,255,255,.02);border:1px solid var(--border);}
+.rank-medal{font-size:18px;min-width:26px;}
+.rank-info{flex:1;min-width:0;}
+.rank-name{font-size:13px;font-weight:700;color:#f8fafc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rank-meta{font-size:11px;color:#94a3b8;margin-top:1px;}
+.rbar-bg{background:rgba(255,255,255,.05);border-radius:4px;height:3px;margin-top:4px;}
+.rbar-m{height:3px;border-radius:4px;background:linear-gradient(90deg,#1a6dff,#38bdf8);}
+.rbar-f{height:3px;border-radius:4px;background:linear-gradient(90deg,#ec4899,#f472b6);}
+.rank-num-m{font-size:20px;font-weight:900;color:#7de4ff;line-height:1;}
+.rank-num-f{font-size:20px;font-weight:900;color:#fd9fd3;line-height:1;}
+.rank-lbl{font-size:10px;color:var(--text3);}
+
+/* CHART */
+.chart-card{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:14px;padding:1.1rem;margin-bottom:1.25rem;}
+.chart-wrap{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;}
+@media(max-width:600px){.chart-wrap{grid-template-columns:1fr;}}
+.chart-side-title{font-size:12px;font-weight:700;margin-bottom:10px;}
+.ct-m{color:var(--male);}.ct-f{color:var(--female);}
+.cbar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;cursor:pointer;transition:opacity .15s;}
+.cbar-row:hover{opacity:.8;}
+.cbar-lbl{font-size:12px;color:#f1f5f9;width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;}
+.cbar-track{flex:1;background:rgba(255,255,255,.05);border-radius:5px;height:18px;overflow:hidden;}
+.cbar-fill-m{height:100%;background:linear-gradient(90deg,#1a6dff,#38bdf8);border-radius:5px;position:relative;}
+.cbar-fill-f{height:100%;background:linear-gradient(90deg,#9333ea,#f472b6);border-radius:5px;position:relative;}
+.cbar-fill-m::after,.cbar-fill-f::after{content:'';position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(180deg,rgba(255,255,255,.15),transparent);}
+.cbar-val{font-size:12px;font-weight:700;color:#f8fafc;min-width:16px;text-align:right;}
+
+/* DUPLICATES */
+.dup-card{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:12px;padding:1.1rem;margin-bottom:1.25rem;}
+.dup-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:.9rem;padding-bottom:7px;border-bottom:1px solid var(--border);}
+.dup-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;}
+.dup-badge{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.2);padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;}
+.dup-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:5px;}
+.dup-name{font-size:12px;color:#f87171;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:6px;padding:5px 9px;cursor:pointer;transition:border-color .15s;}
+.dup-name:hover{border-color:rgba(239,68,68,.5);}
+
+/* MODAL */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:100;display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-ov.on{opacity:1;pointer-events:all;}
+.modal-box{background:linear-gradient(135deg,#051530,#071d3d);border:1px solid var(--borderg);border-radius:18px;padding:1.5rem;width:100%;max-width:500px;max-height:86vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.7);transform:translateY(16px);transition:transform .2s;}
+.modal-ov.on .modal-box{transform:translateY(0);}
+.modal-box::-webkit-scrollbar{width:4px;}
+.modal-box::-webkit-scrollbar-thumb{background:var(--borderg);border-radius:4px;}
+.modal-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.1rem;padding-bottom:.9rem;border-bottom:1px solid var(--border);}
+.modal-title{font-size:18px;font-weight:800;color:#fff;}
+.modal-sub{font-size:12px;color:var(--text2);margin-top:3px;}
+.modal-close{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.08);border:none;color:var(--text2);font-size:15px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.modal-close:hover{background:rgba(255,255,255,.15);color:#fff;}
+.modal-sec{margin-bottom:1rem;}
+.modal-sec-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:9px;display:flex;align-items:center;gap:5px;}
+.modal-sec-title::before{content:'';width:3px;height:11px;background:linear-gradient(180deg,var(--accent),var(--accent2));border-radius:2px;}
+.modal-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;}
+.modal-stat{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:9px;padding:9px;text-align:center;}
+.modal-stat-val{font-size:22px;font-weight:900;color:#fff;}
+.modal-stat-lbl{font-size:10px;color:var(--text2);margin-top:2px;text-transform:uppercase;letter-spacing:.04em;}
+.modal-voter-row{display:flex;align-items:center;justify-content:space-between;padding:7px 9px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:7px;margin-bottom:5px;}
+.modal-voter-name{font-size:13px;color:var(--text);}
+.modal-voter-date{font-size:11px;color:var(--text3);}
+
+.hidden{display:none!important;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="login-wrap">
+  <div class="login-card">
+    <div class="login-icon">🏆</div>
+    <h2>CBI Nomination Dashboard</h2>
+    <p>Staff of the Quarter — Q2 2026 · Final Results</p>
+    <input class="login-input" type="password" id="pwd" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-err" id="login-err">Incorrect password. Please try again.</div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dash" id="dash">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>🏆 CBI Staff of the Quarter — Q2 2026 · Final Results</h1>
+      <p><span class="live-dot"></span>Stage 2 — General Nomination Dashboard</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="mini-status hidden" id="mini-status"></span>
+      <button class="upload-btn-sm" onclick="document.getElementById('file-in').click()">📂 Upload Excel</button>
+    </div>
+  </div>
+  <input type="file" id="file-in" accept=".xlsx,.xls" onchange="handleFile(event)"/>
+
+  <!-- UPLOAD HERO -->
+  <div class="upload-hero" id="upload-hero"
+    onclick="document.getElementById('file-in').click()"
+    ondragover="event.preventDefault();this.classList.add('dragover')"
+    ondragleave="this.classList.remove('dragover')"
+    ondrop="event.preventDefault();this.classList.remove('dragover');handleDrop(event)">
+    <div class="upload-hero-icon">📊</div>
+    <h3>Upload Stage 2 Nomination Responses</h3>
+    <p>Download the latest Stage 2 Excel from Microsoft Forms and upload it here to see the final results</p>
+    <button class="upload-hero-btn" onclick="event.stopPropagation();document.getElementById('file-in').click()">📂 Choose Excel File</button>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="content hidden" id="main">
+
+    <!-- WINNERS -->
+    <div class="sec-hdr"><span class="sec-title">🏆 Staff of the Quarter — Winners</span></div>
+    <div class="winners-grid">
+      <div class="winner-card winner-card-m" id="winner-male">
+        <div class="winner-crown">👑</div>
+        <div class="winner-label winner-label-m">Male — Staff of the Quarter</div>
+        <div class="winner-name" id="winner-male-name">—</div>
+        <div class="winner-noms winner-noms-m" id="winner-male-noms"></div>
+        <div class="winner-sub" id="winner-male-sub"></div>
+        <div class="winner-badge">🏆 Q2 2026 Winner</div>
+      </div>
+      <div class="winner-card winner-card-f" id="winner-female">
+        <div class="winner-crown">👑</div>
+        <div class="winner-label winner-label-f">Female — Staff of the Quarter</div>
+        <div class="winner-name" id="winner-female-name">—</div>
+        <div class="winner-noms winner-noms-f" id="winner-female-noms"></div>
+        <div class="winner-sub" id="winner-female-sub"></div>
+        <div class="winner-badge">🏆 Q2 2026 Winner</div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stat-grid" id="stat-grid"></div>
+
+    <!-- RANKINGS -->
+    <div class="sec-hdr">
+      <span class="sec-title">Full Rankings</span>
+      <span class="tag tag-m">Male</span>
+      <span class="tag tag-f">Female</span>
+      <span class="tag tag-n" style="font-size:10px">Click any name for details</span>
+    </div>
+    <div class="rank-grid">
+      <div class="rank-card rank-card-m" id="rank-male"></div>
+      <div class="rank-card rank-card-f" id="rank-female"></div>
+    </div>
+
+    <!-- CHART -->
+    <div class="sec-hdr"><span class="sec-title">Nomination Count Chart</span></div>
+    <div class="chart-card">
+      <div class="chart-wrap">
+        <div><div class="chart-side-title ct-m">▲ Male Nominees</div><div id="chart-m"></div></div>
+        <div><div class="chart-side-title ct-f">▲ Female Nominees</div><div id="chart-f"></div></div>
+      </div>
+    </div>
+
+    <!-- DUPLICATES -->
+    <div class="dup-card hidden" id="dup-card">
+      <div class="dup-hdr">
+        <span class="dup-title">⚠️ Multiple submissions detected</span>
+        <span class="dup-badge" id="dup-badge">0</span>
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">Only the first submission from each person is counted. Click a name to see all their submissions.</div>
+      <div class="dup-grid" id="dup-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-ov" id="modal-ov" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div><div class="modal-title" id="m-title"></div><div class="modal-sub" id="m-sub"></div></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="m-body"></div>
+  </div>
+</div>
+
+<script>
+var PWD = 'Asgard1993';
+var DATA = [];
+var RAW_ALL = [];
+var NOM_KEY = '';
+var MNK = 'Male Nominee (Select Male Colleague)';
+var FNK = 'Female Nominee (Select Female Colleague)';
+
+function doLogin() {
+  var entered = document.getElementById('pwd').value;
+  if (entered === PWD) {
+    document.getElementById('login-wrap').classList.add('hidden');
+    document.getElementById('dash').style.display = 'block';
+  } else {
+    document.getElementById('login-err').style.display = 'block';
+  }
+}
+
+function handleFile(ev) {
+  var file = ev.target.files[0];
+  if (file) readFile(file);
+}
+function handleDrop(ev) {
+  var file = ev.dataTransfer.files[0];
+  if (file) readFile(file);
+}
+
+function readFile(file) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var wb = XLSX.read(e.target.result, {type:'array'});
+      var ws = wb.Sheets[wb.SheetNames[0]];
+      var raw = XLSX.utils.sheet_to_json(ws, {defval:''});
+      if (!raw.length) { alert('No data found in file.'); return; }
+      processData(raw);
+    } catch(err) {
+      alert('Error reading file: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function processData(raw) {
+  var keys = Object.keys(raw[0]);
+  NOM_KEY = keys.find(function(k){ return k.indexOf('Your name (nominator)') > -1; }) || 'Your name (nominator)';
+
+  var normalized = raw.map(function(row) {
+    var nr = {};
+    Object.keys(row).forEach(function(k){ nr[k] = row[k]; });
+    nr['_nominator'] = String(row[NOM_KEY] || '').trim();
+    nr['_male'] = String(row[MNK] || '').trim();
+    nr['_female'] = String(row[FNK] || '').trim();
+    return nr;
+  });
+
+  normalized.sort(function(a,b){
+    return new Date(a['Start time']||0) - new Date(b['Start time']||0);
+  });
+
+  var seen = {}, dupes = {}, clean = [];
+  normalized.forEach(function(row) {
+    var name = row['_nominator'].toLowerCase();
+    if (!name) { clean.push(row); return; }
+    if (!seen[name]) { seen[name] = true; clean.push(row); }
+    else {
+      var dn = row['_nominator'];
+      dupes[dn] = (dupes[dn] || 1) + 1;
+    }
+  });
+
+  DATA = clean;
+  RAW_ALL = normalized;
+
+  document.getElementById('upload-hero').classList.add('hidden');
+  document.getElementById('main').classList.remove('hidden');
+  var dc = Object.keys(dupes).length;
+  var ms = document.getElementById('mini-status');
+  ms.textContent = '✅ ' + clean.length + ' valid responses' + (dc > 0 ? ' · ' + dc + ' duplicate' + (dc > 1 ? 's' : '') + ' removed' : '') + ' · ' + new Date().toLocaleTimeString();
+  ms.classList.remove('hidden');
+
+  renderAll(dupes);
+}
+
+function calcNominees(gender) {
+  var key = gender === 'male' ? '_male' : '_female';
+  var counts = {};
+  DATA.forEach(function(r) {
+    var n = r[key];
+    if (n) counts[n] = (counts[n] || 0) + 1;
+  });
+  return Object.keys(counts).map(function(n){ return {name:n, count:counts[n]}; })
+    .sort(function(a,b){ return b.count - a.count; });
+}
+
+function renderAll(dupes) {
+  renderWinners();
+  renderStats();
+  renderRankings();
+  renderChart();
+  renderDuplicates(dupes);
+}
+
+function renderWinners() {
+  var mAll = calcNominees('male');
+  var fAll = calcNominees('female');
+  var mW = mAll[0];
+  var fW = fAll[0];
+  var total = DATA.length;
+
+  if (mW) {
+    document.getElementById('winner-male-name').textContent = mW.name;
+    document.getElementById('winner-male-noms').textContent = mW.count + ' nominations received';
+    document.getElementById('winner-male-sub').textContent = Math.round(mW.count / total * 100) + '% of all votes';
+  }
+  if (fW) {
+    document.getElementById('winner-female-name').textContent = fW.name;
+    document.getElementById('winner-female-noms').textContent = fW.count + ' nominations received';
+    document.getElementById('winner-female-sub').textContent = Math.round(fW.count / total * 100) + '% of all votes';
+  }
+}
+
+function renderStats() {
+  var mAll = calcNominees('male');
+  var fAll = calcNominees('female');
+  var html =
+    '<div class="stat-card"><div class="stat-lbl">Total votes cast</div><div class="stat-val">' + DATA.length + '</div><div class="stat-sub">valid submissions</div></div>' +
+    '<div class="stat-card"><div class="stat-lbl">Male candidates</div><div class="stat-val">' + mAll.length + '</div><div class="stat-sub">nominated</div></div>' +
+    '<div class="stat-card"><div class="stat-lbl">Female candidates</div><div class="stat-val">' + fAll.length + '</div><div class="stat-sub">nominated</div></div>';
+  if (mAll[0]) html += '<div class="stat-card"><div class="stat-lbl">🥇 Male winner</div><div class="stat-val" style="font-size:16px;margin-top:5px">' + mAll[0].name.split(' ')[0] + '</div><div class="stat-sub">' + mAll[0].count + ' votes</div></div>';
+  if (fAll[0]) html += '<div class="stat-card"><div class="stat-lbl">🥇 Female winner</div><div class="stat-val" style="font-size:16px;margin-top:5px">' + fAll[0].name.split(' ')[0] + '</div><div class="stat-sub">' + fAll[0].count + ' votes</div></div>';
+  document.getElementById('stat-grid').innerHTML = html;
+}
+
+function renderRankings() {
+  ['male','female'].forEach(function(gender) {
+    var all = calcNominees(gender);
+    var isMale = gender === 'male';
+    var max = all[0] ? all[0].count : 1;
+    var medals = ['🥇','🥈','🥉'];
+    var hdr = '<div class="rank-card-hdr"><span class="tag ' + (isMale?'tag-m':'tag-f') + '">' + (isMale?'MALE':'FEMALE') + '</span><span class="rank-card-title">Ranking by nominations</span></div>';
+    var rows = all.map(function(r, i) {
+      var medal = i < 3 ? medals[i] : (i + 1);
+      var rowClass = i === 0 ? 'rr1' : i === 1 ? 'rr2' : i === 2 ? 'rr3' : 'rrow-rest';
+      var safeName = r.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      return '<div class="rank-row ' + rowClass + '" onclick="openNomineeModal(\'' + safeName + '\',\'' + gender + '\')">' +
+        '<div class="rank-medal">' + medal + '</div>' +
+        '<div class="rank-info">' +
+          '<div class="rank-name">' + r.name + '</div>' +
+          '<div class="rank-meta">' + Math.round(r.count/max*100) + '% of top · tap for details</div>' +
+          '<div class="rbar-bg"><div class="' + (isMale?'rbar-m':'rbar-f') + '" style="width:' + Math.round(r.count/max*100) + '%"></div></div>' +
+        '</div>' +
+        '<div style="text-align:right;min-width:44px">' +
+          '<div class="' + (isMale?'rank-num-m':'rank-num-f') + '">' + r.count + '</div>' +
+          '<div class="rank-lbl">vote' + (r.count > 1 ? 's' : '') + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    document.getElementById('rank-' + gender).innerHTML = hdr + (rows || '<div style="color:var(--text3);padding:.75rem;font-size:13px">No data yet</div>');
+  });
+}
+
+function renderChart() {
+  ['male','female'].forEach(function(gender) {
+    var all = calcNominees(gender);
+    var max = all[0] ? all[0].count : 1;
+    var isMale = gender === 'male';
+    var html = all.map(function(r) {
+      var safeName = r.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      var shortName = r.name.split(' ')[0] + ' ' + (r.name.split(' ')[1] || '');
+      return '<div class="cbar-row" onclick="openNomineeModal(\'' + safeName + '\',\'' + gender + '\')">' +
+        '<div class="cbar-lbl" title="' + r.name + '">' + shortName + '</div>' +
+        '<div class="cbar-track"><div class="' + (isMale?'cbar-fill-m':'cbar-fill-f') + '" style="width:' + Math.round(r.count/max*100) + '%"></div></div>' +
+        '<div class="cbar-val">' + r.count + '</div>' +
+      '</div>';
+    }).join('');
+    document.getElementById('chart-' + (isMale?'m':'f')).innerHTML = html || '<div style="color:var(--text3);font-size:12px">No data</div>';
+  });
+}
+
+function renderDuplicates(dupes) {
+  var entries = Object.keys(dupes);
+  if (!entries.length) { document.getElementById('dup-card').classList.add('hidden'); return; }
+  document.getElementById('dup-card').classList.remove('hidden');
+  document.getElementById('dup-badge').textContent = entries.length + ' staff';
+  document.getElementById('dup-list').innerHTML = entries.map(function(n) {
+    var safeName = n.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return '<div class="dup-name" onclick="openDupModal(\'' + safeName + '\')">' + n + ' <span style="font-size:11px">(' + dupes[n] + 'x)</span></div>';
+  }).join('');
+}
+
+// ── MODAL ──
+function showModal(title, sub, body) {
+  document.getElementById('m-title').textContent = title;
+  document.getElementById('m-sub').textContent = sub;
+  document.getElementById('m-body').innerHTML = body;
+  document.getElementById('modal-ov').classList.add('on');
+}
+function closeModal() {
+  document.getElementById('modal-ov').classList.remove('on');
+}
+
+function openNomineeModal(name, gender) {
+  var key = gender === 'male' ? '_male' : '_female';
+  var myRows = DATA.filter(function(r){ return r[key] === name; });
+  if (!myRows.length) { showModal(name, 'No data', '<p style="color:var(--text3)">No nominations found.</p>'); return; }
+  var total = DATA.length;
+  var pct = Math.round(myRows.length / total * 100);
+  var isMale = gender === 'male';
+
+  var statsHTML = '<div class="modal-stats">' +
+    '<div class="modal-stat"><div class="modal-stat-val">' + myRows.length + '</div><div class="modal-stat-lbl">Votes received</div></div>' +
+    '<div class="modal-stat"><div class="modal-stat-val">' + pct + '%</div><div class="modal-stat-lbl">Of total votes</div></div>' +
+  '</div>';
+
+  var votersHTML = '<div class="modal-sec"><div class="modal-sec-title">Nominated by (' + myRows.length + ')</div>' +
+    myRows.map(function(r) {
+      var nom = r['_nominator'];
+      var date = r['Start time'] ? new Date(r['Start time']).toLocaleDateString() : '';
+      return '<div class="modal-voter-row"><div class="modal-voter-name">' + nom + '</div><div class="modal-voter-date">' + date + '</div></div>';
+    }).join('') + '</div>';
+
+  var isWinner = calcNominees(gender)[0] && calcNominees(gender)[0].name === name;
+  var sub = (isMale ? 'Male' : 'Female') + ' Nominee' + (isWinner ? ' · 🏆 Q2 2026 Winner' : '');
+  showModal(name, sub, statsHTML + votersHTML);
+}
+
+function openDupModal(name) {
+  var rows = RAW_ALL.filter(function(r){ return r['_nominator'].toLowerCase() === name.toLowerCase(); });
+  var body = '<div class="modal-sec"><div class="modal-sec-title">All submissions by ' + name + '</div>' +
+    rows.map(function(r, i) {
+      var date = r['Start time'] ? new Date(r['Start time']).toLocaleString() : 'Unknown';
+      var male = r['_male'];
+      var female = r['_female'];
+      return '<div class="modal-voter-row" style="' + (i===0?'border-color:rgba(16,185,129,.4)':'border-color:rgba(239,68,68,.3)') + '">' +
+        '<div style="flex:1">' +
+          '<div style="font-size:12px;font-weight:700;color:' + (i===0?'#10b981':'#f87171') + '">' + (i===0?'✅ COUNTED':'❌ DUPLICATE') + '</div>' +
+          '<div style="font-size:12px;color:var(--text);margin-top:2px">♂ ' + male + ' · ♀ ' + female + '</div>' +
+          '<div style="font-size:11px;color:var(--text3);margin-top:1px">' + date + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('') + '</div>';
+  showModal(name, 'Multiple submissions detected', body);
+}
+</script>
+</body>
+</html>
